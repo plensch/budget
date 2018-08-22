@@ -8,7 +8,7 @@ try:
 except ImportError:
     pass
 
-# date variables
+
 class dateinfo:
     def today(): # ("YYYY", "MM", "DD")
         date_today = date.today()
@@ -25,4 +25,37 @@ class dateinfo:
 
         return (year, month)
 
-print(dateinfo.today(), dateinfo.last_month())
+class budgetfile:
+    def read(path):
+        budget = []
+
+        with open(path, "r") as budgetfile:
+            for line in budgetfile:
+                line = line.strip("\n")
+                line = line.split(";")
+
+                # entry (("YYYY", "MM". "DD"), amount, "purpose")
+                entry = [((line[0], line[1], line[2]),
+                        float(line[3]), line[4])]
+
+                budget.extend(entry)
+
+        return budget
+
+    def write(path, budget):
+        with open(path, "w") as budgetfile:
+            for entry in budget:
+                date = entry[0]
+                year = date[0]
+                month = date[1]
+                day = date[2]
+                amount = str(entry[1])
+                purpose = entry[2]
+
+                entry_data = {"year": year, "month": month, "day": day,
+                              "amount": amount, "purpose": purpose}
+
+                entry_format = "{year};{month};{day};{amount};{purpose}\n"
+                entry_formatted = entry_format.format(**entry_data)
+
+                budgetfile.write(entry_formatted)
