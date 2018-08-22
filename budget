@@ -9,7 +9,20 @@ except ImportError:
     pass
 
 # date variables
-date_today = date.today() # YYYY-MM-DD
-date_last_month = date_today.replace(day=1) - timedelta(days=1)
+class dateinfo:
+    def today(): # ("YYYY", "MM", "DD")
+        date_today = date.today()
+        year = date_today.strftime("%Y")
+        month = date_today.strftime("%m")
+        day = date_today.strftime("%d")
 
-print(date_today)
+        return (year, month, day)
+
+    def last_month():
+        date_last_month = date.today().replace(day=1) - timedelta(days=1)
+        year = date_last_month.strftime("%Y")
+        month = date_last_month.strftime("%m")
+
+        return (year, month)
+
+print(dateinfo.today(), dateinfo.last_month())
