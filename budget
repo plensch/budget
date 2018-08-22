@@ -2,20 +2,14 @@
 
 # libraries
 from datetime import date, timedelta
+
 try:
     import readline
 except ImportError:
     pass
 
 # date variables
-date_today = date(2018,1,2) #date.today() # YYYY-MM-DD
+date_today = date.today() # YYYY-MM-DD
 date_last_month = date_today.replace(day=1) - timedelta(days=1)
 
-dates = [date_today, date_last_month]
-
-for date in dates:
-    print(date.month)
-    print(date - timedelta(days=265))
-    print(date)
-print(dates)
-
+print(date_today)
