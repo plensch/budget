@@ -25,6 +25,15 @@ class dateinfo:
 
         return (year, month)
 
+    def string():
+        date = dateinfo.today()
+        year = str(date[0])
+        month = str(date[1])
+        day = str(date[2])
+        datestring = year + "-" + month + "-" + day
+
+        return datestring
+
 class budgetfile:
     def read(path):
         budget = []
@@ -34,28 +43,57 @@ class budgetfile:
                 line = line.strip("\n")
                 line = line.split(";")
 
-                # entry (("YYYY", "MM". "DD"), amount, "purpose")
-                entry = [((line[0], line[1], line[2]),
-                        float(line[3]), line[4])]
+                entry = {"year": line[0], "month": line[1], "day":line[2],
+                         "amount": float(line[3]), "purpose": line[4]}
 
-                budget.extend(entry)
+                budget.extend([entry])
 
         return budget
 
     def write(path, budget):
         with open(path, "w") as budgetfile:
             for entry in budget:
-                date = entry[0]
-                year = date[0]
-                month = date[1]
-                day = date[2]
-                amount = str(entry[1])
-                purpose = entry[2]
-
-                entry_data = {"year": year, "month": month, "day": day,
-                              "amount": amount, "purpose": purpose}
-
                 entry_format = "{year};{month};{day};{amount};{purpose}\n"
-                entry_formatted = entry_format.format(**entry_data)
+                entry_formatted = entry_format.format(**entry)
 
                 budgetfile.write(entry_formatted)
+
+class calculate:
+    def budget(budget):
+        saldo = 0
+        income = 0
+        expenses = 0
+
+        for entry in budget:
+            amount = entry["amount"]
+            saldo += amount
+            if amount > 0:
+                income += amount
+            else:
+                expenses += amount
+
+        return (saldo, income, expenses)
+
+if __name__ == "__main__":
+    path = "/home/plensch/projects/budget/budget_file"
+    budget = budgetfile.read(path)
+    prompt = dateinfo.string() + " > "
+    try:
+        while True:
+            userin = input(prompt)
+            if userin == "p":
+                print(calculate.budget(budget))
+            elif userin == "q":
+                budgetfile.write(path, budget)
+                break
+    except KeyboardInterrupt:
+        print("\nAborting - No changes have been made.")
+
+
+
+
+
+
+
+
+
