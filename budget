@@ -1,7 +1,5 @@
 #!/bin/env python3
 
-#todo: catch errors (read budget_file)
-
 # libraries
 from datetime import date, timedelta
 
@@ -46,26 +44,32 @@ class dateinfo:
 class budgetfile:
     def read(path):
         budget = []
+        try:
+            with open(path, "r") as budgetfile:
+                for line in budgetfile:
+                    line = line.strip("\n")
+                    line = line.split(";")
 
-        with open(path, "r") as budgetfile:
-            for line in budgetfile:
-                line = line.strip("\n")
-                line = line.split(";")
+                    entry = {"year": line[0], "month": line[1],
+                             "day":line[2], "amount": float(line[3]),
+                             "purpose": line[4]}
 
-                entry = {"year": line[0], "month": line[1], "day":line[2],
-                         "amount": float(line[3]), "purpose": line[4]}
+                    budget.extend([entry])
 
-                budget.extend([entry])
-
-        return budget
+            return budget
+        except:
+            raise
 
     def write(path, budget):
-        with open(path, "w") as budgetfile:
-            for entry in budget:
-                entry_format = "{year};{month};{day};{amount};{purpose}\n"
-                entry_formatted = entry_format.format(**entry)
+        entry_format = "{year};{month};{day};{amount};{purpose}\n"
+        try:
+            with open(path, "w") as budgetfile:
+                for entry in budget:
+                    entry_formatted = entry_format.format(**entry)
 
-                budgetfile.write(entry_formatted)
+                    budgetfile.write(entry_formatted)
+        except:
+            raise
 
 class calculate:
     def budget(budget):
@@ -85,7 +89,7 @@ class calculate:
         return calculation
 
 class visualize:
-    def as_text(budget_calculation):
+    def summary(budget_calculation):
         bc = budget_calculation
         saldo = str(bc["saldo"])
         income = color.text("green", str(bc["income"]))
@@ -96,27 +100,22 @@ class visualize:
         print(vis_saldo)
 
 if __name__ == "__main__":
-    path = "/home/plensch/projects/budget/budget_file"
-    budget = budgetfile.read(path)
-    prompt = dateinfo.string() + " > "
-
     try:
+        path = "/home/plensch/projects/budget/budget_file"
+        budget = budgetfile.read(path)
+        prompt = "> "
+
         while True:
             userin = input(prompt)
             if userin == "p":
-                visualize.as_text(calculate.budget(budget))
+                visualize.summary(calculate.budget(budget))
             elif userin == "q":
                 budgetfile.write(path, budget)
                 break
 
     except KeyboardInterrupt:
         print("\nAborting - No changes have been made.")
-
-
-
-
-
-
-
-
-
+    except FileNotFoundError:
+        print(path + " not found.")
+    except PermissionError:
+        print("Permission denied: "+ path)
