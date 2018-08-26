@@ -1,5 +1,7 @@
 #!/bin/env python3
 
+#todo: replace budget data (dict) with list and add translation dict
+
 # libraries
 from datetime import date, timedelta
 
@@ -40,10 +42,13 @@ class dateinfo:
         datestring = year + "-" + month + "-" + day
 
         return datestring
+class budgets:
+    budget = []
 
 class budgetfile:
     def read(path):
         budget = []
+
         try:
             with open(path, "r") as budgetfile:
                 for line in budgetfile:
@@ -71,6 +76,25 @@ class budgetfile:
         except:
             raise
 
+
+class transaction:
+    def new(amount, purpose):
+        amount = round(float(amount), 2)
+        date = dateinfo.today()
+        year = date[0]
+        month = date[1]
+        day = date[2]
+
+        transaction = {"year": year, "month": month, "day": day, 
+                       "amount": amount, "purpose": purpose}
+
+        return transaction
+
+    def add(budget, transaction):
+        budget = budget.extend([transaction])
+
+        return budget
+
 class calculate:
     def budget(budget):
         saldo = 0
@@ -84,6 +108,10 @@ class calculate:
                 income += amount
             else:
                 expenses += amount
+        saldo = round(saldo, 2)
+        income = round(income, 2)
+        expenses = round(expenses, 2)
+
         calculation = {"saldo": saldo, "income": income,
                        "expenses": expenses}
         return calculation
@@ -102,16 +130,25 @@ class visualize:
 if __name__ == "__main__":
     try:
         path = "/home/plensch/projects/budget/budget_file"
-        budget = budgetfile.read(path)
+        budgets.budget = budgetfile.read(path)
         prompt = "> "
 
         while True:
             userin = input(prompt)
+            userin_split = userin.split(" ")
+
             if userin == "p":
-                visualize.summary(calculate.budget(budget))
+                visualize.summary(calculate.budget(budgets.budget))
             elif userin == "q":
-                budgetfile.write(path, budget)
+                budgetfile.write(path, budgets.budget)
                 break
+            elif userin == "l":
+                for entry in budgets.budget:
+                    print(entry)
+            else:
+                amount = userin_split[0]
+                purpose = userin_split[1]
+                budgets.budget.extend([transaction.new(amount, purpose)])
 
     except KeyboardInterrupt:
         print("\nAborting - No changes have been made.")
