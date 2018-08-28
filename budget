@@ -42,6 +42,12 @@ class dateinfo:
         datestring = year + "-" + month + "-" + day
 
         return datestring
+
+    def to_string(year, month, day):
+        date_str = "{}-{}-{}".format(year, month, day)
+
+        return date_str
+
 class budgets:
     budget = []
 
@@ -75,7 +81,6 @@ class budgetfile:
                     budgetfile.write(entry_formatted)
         except:
             raise
-
 
 class transaction:
     def new(amount, purpose):
@@ -117,6 +122,24 @@ class calculate:
         return calculation
 
 class visualize:
+    def list(budget):
+        for entry in budget:
+            amount = entry["amount"]
+            purpose = entry["purpose"]
+            year = entry["year"]
+            month = entry["month"]
+            day = entry["day"]
+            date = dateinfo.to_string(year, month, day)
+
+            if amount > 0:
+                amount_color = "green"
+            else:
+                amount_color = "red"
+            vis_amount = color.text(amount_color, str(amount))
+            vis_output = "{} {} {}".format(vis_amount, date, purpose)
+
+            print(vis_output)
+
     def summary(budget_calculation):
         bc = budget_calculation
         saldo = str(bc["saldo"])
@@ -143,8 +166,9 @@ if __name__ == "__main__":
                 budgetfile.write(path, budgets.budget)
                 break
             elif userin == "l":
-                for entry in budgets.budget:
-                    print(entry)
+                visualize.list(budgets.budget)
+            elif userin == "t":
+                print(budgets.budget)
             else:
                 amount = userin_split[0]
                 purpose = userin_split[1]
