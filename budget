@@ -1,6 +1,17 @@
 #!/bin/env python3
 
 #todo: replace budget data (dict) with list and add translation dict
+#todo: add tags
+#todo: remove code tagged: '#REMOVE'
+#todo: clean up code tagged: '#HACK'
+
+"""
+removed: datestring,
+added: budgets format_entry/read_entry/translate_entry,
+modified: budgetfile read (to use budgets.format), budget data structure,
+all functions to use new budget data structure
+
+"""
 
 # libraries
 from datetime import date, timedelta
@@ -34,15 +45,6 @@ class dateinfo:
 
         return (year, month)
 
-    def string():
-        date = dateinfo.today()
-        year = str(date[0])
-        month = str(date[1])
-        day = str(date[2])
-        datestring = year + "-" + month + "-" + day
-
-        return datestring
-
     def to_string(year, month, day):
         date_str = "{}-{}-{}".format(year, month, day)
 
@@ -50,6 +52,26 @@ class dateinfo:
 
 class budgets:
     budget = []
+    entry_dict = {"year": 0, "month": 1, "day": 2,
+                  "amount": 3, "purpose": 4}
+
+    def format_entry(year, month, day, amount, purpose):
+        amount = round(float(amount), 2)
+        entry = [year, month, day, amount, purpose]
+
+        return entry
+
+    def read_entry(entry, item):
+        item_value = entry[budgets.entry_dict[item]]
+
+        return item_value
+
+    #HACK
+    def translate_entry(entry):
+        temp_tuple_list = list(zip(budgets.entry_dict, entry))
+        entry_as_dict = {k: v for k,v in temp_tuple_list}
+
+        return entry_as_dict
 
 class budgetfile:
     def read(path):
@@ -61,11 +83,21 @@ class budgetfile:
                     line = line.strip("\n")
                     line = line.split(";")
 
+                    year = line[0]
+                    month = line[1]
+                    day = line[2]
+                    amount = float(line[3])
+                    purpose = line[4]
+
+                    entry_new = budgets.format_entry(year, month, day,
+                                                     amount, purpose)
+
+                    #REMOVE
                     entry = {"year": line[0], "month": line[1],
                              "day":line[2], "amount": float(line[3]),
                              "purpose": line[4]}
 
-                    budget.extend([entry])
+                    budget.extend([entry_new])
 
             return budget
         except:
@@ -76,7 +108,8 @@ class budgetfile:
         try:
             with open(path, "w") as budgetfile:
                 for entry in budget:
-                    entry_formatted = entry_format.format(**entry)
+                    entry_as_dict = budgets.translate_entry(entry)
+                    entry_formatted = entry_format.format(**entry_as_dict)
 
                     budgetfile.write(entry_formatted)
         except:
@@ -84,14 +117,13 @@ class budgetfile:
 
 class transaction:
     def new(amount, purpose):
-        amount = round(float(amount), 2)
         date = dateinfo.today()
         year = date[0]
         month = date[1]
         day = date[2]
 
-        transaction = {"year": year, "month": month, "day": day, 
-                       "amount": amount, "purpose": purpose}
+        transaction = budgets.format_entry(year, month, day,
+                                           amount, purpose)
 
         return transaction
 
@@ -156,6 +188,7 @@ if __name__ == "__main__":
         budgets.budget = budgetfile.read(path)
         prompt = "> "
 
+        """
         while True:
             userin = input(prompt)
             userin_split = userin.split(" ")
@@ -173,7 +206,7 @@ if __name__ == "__main__":
                 amount = userin_split[0]
                 purpose = userin_split[1]
                 budgets.budget.extend([transaction.new(amount, purpose)])
-
+        """
     except KeyboardInterrupt:
         print("\nAborting - No changes have been made.")
     except FileNotFoundError:
