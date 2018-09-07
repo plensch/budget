@@ -1,17 +1,8 @@
 #!/bin/env python3
 
 #todo: replace budget data (dict) with list and add translation dict
-#todo: add tags
-#todo: remove code tagged: '#REMOVE'
+#todo: add tags to budget entries
 #todo: clean up code tagged: '#HACK'
-
-"""
-removed: datestring,
-added: budgets format_entry/read_entry/translate_entry,
-modified: budgetfile read (to use budgets.format), budget data structure,
-all functions to use new budget data structure
-
-"""
 
 # libraries
 from datetime import date, timedelta
@@ -57,7 +48,7 @@ class budgets:
 
     def format_entry(year, month, day, amount, purpose):
         amount = round(float(amount), 2)
-        entry = [year, month, day, amount, purpose]
+        entry = (year, month, day, amount, purpose)
 
         return entry
 
@@ -89,15 +80,10 @@ class budgetfile:
                     amount = float(line[3])
                     purpose = line[4]
 
-                    entry_new = budgets.format_entry(year, month, day,
-                                                     amount, purpose)
+                    entry = budgets.format_entry(year, month, day,
+                                                 amount, purpose)
 
-                    #REMOVE
-                    entry = {"year": line[0], "month": line[1],
-                             "day":line[2], "amount": float(line[3]),
-                             "purpose": line[4]}
-
-                    budget.extend([entry_new])
+                    budget.extend([entry])
 
             return budget
         except:
@@ -139,39 +125,24 @@ class calculate:
         expenses = 0
 
         for entry in budget:
-            amount = entry["amount"]
+            amount = budgets.read_entry(entry, "amount")
             saldo += amount
+
             if amount > 0:
                 income += amount
             else:
                 expenses += amount
+
         saldo = round(saldo, 2)
         income = round(income, 2)
         expenses = round(expenses, 2)
 
         calculation = {"saldo": saldo, "income": income,
                        "expenses": expenses}
+
         return calculation
 
 class visualize:
-    def list(budget):
-        for entry in budget:
-            amount = entry["amount"]
-            purpose = entry["purpose"]
-            year = entry["year"]
-            month = entry["month"]
-            day = entry["day"]
-            date = dateinfo.to_string(year, month, day)
-
-            if amount > 0:
-                amount_color = "green"
-            else:
-                amount_color = "red"
-            vis_amount = color.text(amount_color, str(amount))
-            vis_output = "{} {} {}".format(vis_amount, date, purpose)
-
-            print(vis_output)
-
     def summary(budget_calculation):
         bc = budget_calculation
         saldo = str(bc["saldo"])
@@ -187,6 +158,7 @@ if __name__ == "__main__":
         path = "/home/plensch/projects/budget/budget_file"
         budgets.budget = budgetfile.read(path)
         prompt = "> "
+        visualize.summary(calculate.budget(budgets.budget))
 
         """
         while True:
