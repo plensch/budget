@@ -1,8 +1,8 @@
 #!/bin/env python3
 
-#todo: replace budget data (dict) with list and add translation dict
 #todo: add tags to budget entries
 #todo: clean up code tagged: '#HACK'
+#todo: add backup (budget_file.edit) system
 
 # libraries
 from datetime import date, timedelta
@@ -46,6 +46,8 @@ class budgets:
     entry_dict = {"year": 0, "month": 1, "day": 2,
                   "amount": 3, "purpose": 4}
 
+    entry_format = "{year};{month};{day};{amount};{purpose}\n"
+
     def format_entry(year, month, day, amount, purpose):
         amount = round(float(amount), 2)
         entry = (year, month, day, amount, purpose)
@@ -73,12 +75,13 @@ class budgetfile:
                 for line in budgetfile:
                     line = line.strip("\n")
                     line = line.split(";")
+                    bd = budgets.entry_dict
 
-                    year = line[0]
-                    month = line[1]
-                    day = line[2]
-                    amount = float(line[3])
-                    purpose = line[4]
+                    year = line[bd["year"]]
+                    month = line[bd["month"]]
+                    day = line[bd["day"]]
+                    amount = float(line[bd["amount"]])
+                    purpose = line[bd["purpose"]]
 
                     entry = budgets.format_entry(year, month, day,
                                                  amount, purpose)
@@ -90,7 +93,8 @@ class budgetfile:
             raise
 
     def write(path, budget):
-        entry_format = "{year};{month};{day};{amount};{purpose}\n"
+        entry_format = budgets.entry_format
+
         try:
             with open(path, "w") as budgetfile:
                 for entry in budget:
@@ -160,7 +164,6 @@ if __name__ == "__main__":
         prompt = "> "
         visualize.summary(calculate.budget(budgets.budget))
 
-        """
         while True:
             userin = input(prompt)
             userin_split = userin.split(" ")
@@ -169,6 +172,7 @@ if __name__ == "__main__":
                 visualize.summary(calculate.budget(budgets.budget))
             elif userin == "q":
                 budgetfile.write(path, budgets.budget)
+                print("Success - All changes have been saved.")
                 break
             elif userin == "l":
                 visualize.list(budgets.budget)
@@ -178,7 +182,7 @@ if __name__ == "__main__":
                 amount = userin_split[0]
                 purpose = userin_split[1]
                 budgets.budget.extend([transaction.new(amount, purpose)])
-        """
+
     except KeyboardInterrupt:
         print("\nAborting - No changes have been made.")
     except FileNotFoundError:
