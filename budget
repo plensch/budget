@@ -3,6 +3,7 @@
 #todo: add tags to budget entries
 #todo: clean up code tagged: '#HACK'
 #todo: add backup (budget_file.edit) system
+#todo: clean main loop
 
 # libraries
 from datetime import date, timedelta
@@ -21,7 +22,7 @@ class color:
         return colored_string
 
 class dateinfo:
-    def today(): # ("YYYY", "MM", "DD")
+    def today():
         date_today = date.today()
         year = date_today.strftime("%Y")
         month = date_today.strftime("%m")
@@ -65,6 +66,18 @@ class budgets:
         entry_as_dict = {k: v for k,v in temp_tuple_list}
 
         return entry_as_dict
+
+    def filter(budget, year, month):
+        filtered_budget = []
+
+        for entry in budget:
+            entry_year = budgets.read_entry(entry, "year")
+            entry_month = budgets.read_entry(entry, "month")
+
+            if entry_month == month and entry_month == month:
+                filtered_budget.extend([entry])
+
+        return filtered_budget
 
 class budgetfile:
     def read(path):
@@ -162,20 +175,24 @@ if __name__ == "__main__":
         path = "/home/plensch/projects/budget/budget_file"
         budgets.budget = budgetfile.read(path)
         prompt = "> "
+
         visualize.summary(calculate.budget(budgets.budget))
 
         while True:
             userin = input(prompt)
             userin_split = userin.split(" ")
 
-            if userin == "p":
+            if userin == "total":
                 visualize.summary(calculate.budget(budgets.budget))
+            elif userin == "month":
+                n_date = dateinfo.today()
+                monthly_budget = budgets.filter(budgets.budget,
+                                                n_date[0], n_date[1])
+                visualize.summary(calculate.budget(monthly_budget))
             elif userin == "q":
                 budgetfile.write(path, budgets.budget)
                 print("Success - All changes have been saved.")
                 break
-            elif userin == "l":
-                visualize.list(budgets.budget)
             elif userin == "t":
                 print(budgets.budget)
             else:
