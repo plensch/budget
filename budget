@@ -16,7 +16,7 @@ except ImportError:
 class color:
     def text(color, string):
         colors = {"red": "\33[31m", "green": "\33[32m", "redbg": "\33[41m",
-                  "greenbg": "\33[42m", "cend": "\33[0m" , "noc": ""}
+                  "greenbg": "\33[42m", "cend": "\33[0m"}
         colored_string = colors[color] + string + colors["cend"]
 
         return colored_string
@@ -60,7 +60,7 @@ class budgets:
 
         return item_value
 
-    #HACK
+    #HACK (from stackoverflow)
     def translate_entry(entry):
         temp_tuple_list = list(zip(budgets.entry_dict, entry))
         entry_as_dict = {k: v for k,v in temp_tuple_list}
@@ -102,8 +102,11 @@ class budgetfile:
                     budget.extend([entry])
 
             return budget
-        except:
-            raise
+
+        except FileNotFoundError:
+            print(path + " not found.")
+        except PermissionError:
+            print("Permission denied: "+ path)
 
     def write(path, budget):
         entry_format = budgets.entry_format
@@ -115,8 +118,22 @@ class budgetfile:
                     entry_formatted = entry_format.format(**entry_as_dict)
 
                     budgetfile.write(entry_formatted)
-        except:
-            raise
+
+        except PermissionError:
+            print("Permission denied: "+ path)
+
+    def backup(path):
+        try:
+            backup_file = path + ".edit"
+            with open(path, "r") as org_budgetfile:
+                with open(backup_file, "w") as bckp_budgetfile:
+                    for entry in org_budgetfile:
+                        bckp_budgetfile.write(entry)
+
+        except FileNotFoundError:
+            print(path + " not found.")
+        except PermissionError:
+            print("Permission denied: "+ path)
 
 class transaction:
     def new(amount, purpose):
@@ -174,6 +191,8 @@ if __name__ == "__main__":
     try:
         path = "/home/plensch/projects/budget/budget_file"
         budgets.budget = budgetfile.read(path)
+        budgetfile.backup(path)
+
         prompt = "> "
 
         visualize.summary(calculate.budget(budgets.budget))
@@ -202,7 +221,3 @@ if __name__ == "__main__":
 
     except KeyboardInterrupt:
         print("\nAborting - No changes have been made.")
-    except FileNotFoundError:
-        print(path + " not found.")
-    except PermissionError:
-        print("Permission denied: "+ path)
