@@ -2,6 +2,7 @@
 
 #todo: add tags to budget entries
 #todo: clean up code tagged: '#HACK'
+#todo: clean up budget path method
 
 # libraries
 from datetime import date, timedelta
@@ -201,14 +202,33 @@ class commands:
         budget_vis = visualize.summary(budget_calc)
 
         print(budget_vis)
+
+    def transaction(args):
+        amount = args[0]
+        purpose = args[1]
+        transac = transaction.new(amount, purpose)
+        transaction.add(budgets.budget, transac)
+
+    def raw_list():
+        for entry in budgets.budget:
+            print(entry)
+    def help():
+        print("Available commands:")
+        for entry in available_commands.commands:
+            print(entry)
     #HACK
     def exit():
+        path = "/home/plensch/projects/budget/budget_file"
+        budgetfile.write(path, budgets.budget)
         print("All changes have been saved.")
         raise SystemExit
 
 class available_commands:
     commands = {"total": commands.total,
                 "month": commands.month,
+                "t": commands.transaction,
+                "l": commands.raw_list,
+                "h": commands.help,
                 "q": commands.exit}
 
 class userinput:
@@ -226,8 +246,10 @@ class userinput:
             args = userin["arguments"]
             exec_func = available_commands.commands[cmd]
 
-            return exec_func()
-
+            if args and '' not in args:
+                return exec_func(args)
+            else:
+                return exec_func()
         except:
             raise
 
@@ -242,12 +264,16 @@ if __name__ == "__main__":
         while True:
             try:
                 userin = input(prompt)
-                userinput.execute(userinput.split(userin))
+                userin_split = userinput.split(userin)
+                userinput.execute(userin_split)
 
             except KeyError:
                 print(userin + " - Command not found.")
             except SystemExit:
                 break
+            #HACK
+            except:
+                print("Try again.")
 
     except KeyboardInterrupt:
         print("\nAborted - No changes have been made.")
