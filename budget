@@ -1,8 +1,9 @@
 #!/bin/env python3
 
-#todo: add tags to budget entries
 #todo: clean up code tagged: '#HACK'
 #todo: clean up budget path method
+#todo: figure out "self" in classes
+#todo: add error handling system
 
 # libraries
 from datetime import date, timedelta
@@ -44,13 +45,13 @@ class dateinfo:
 class budgets:
     budget = []
     entry_dict = {"year": 0, "month": 1, "day": 2,
-                  "amount": 3, "purpose": 4}
+                  "amount": 3, "purpose": 4, "tag": 5}
 
-    entry_format = "{year};{month};{day};{amount};{purpose}\n"
+    entry_format = "{year};{month};{day};{amount};{purpose};{tag}\n"
 
-    def format_entry(year, month, day, amount, purpose):
+    def format_entry(year, month, day, amount, purpose, tag):
         amount = round(float(amount), 2)
-        entry = (year, month, day, amount, purpose)
+        entry = (year, month, day, amount, purpose, tag)
 
         return entry
 
@@ -94,9 +95,10 @@ class budgetfile:
                     day = line[bd["day"]]
                     amount = float(line[bd["amount"]])
                     purpose = line[bd["purpose"]]
+                    tag = line[bd["tag"]]
 
                     entry = budgets.format_entry(year, month, day,
-                                                 amount, purpose)
+                                                 amount, purpose, tag)
 
                     budget.extend([entry])
 
@@ -135,14 +137,14 @@ class budgetfile:
             print("Permission denied: "+ path)
 
 class transaction:
-    def new(amount, purpose):
+    def new(amount, purpose, tag='notag'):
         date = dateinfo.today()
         year = date[0]
         month = date[1]
         day = date[2]
 
         transaction = budgets.format_entry(year, month, day,
-                                           amount, purpose)
+                                           amount, purpose, tag)
 
         return transaction
 
@@ -204,9 +206,16 @@ class commands:
         print(budget_vis)
 
     def transaction(args):
+        print(args)
         amount = args[0]
         purpose = args[1]
-        transac = transaction.new(amount, purpose)
+
+        if len(args) >= 3:
+            tag = args[2]
+            transac = transaction.new(amount, purpose, tag)
+        else:
+            transac = transaction.new(amount, purpose)
+
         transaction.add(budgets.budget, transac)
 
     def raw_list():
@@ -271,9 +280,6 @@ if __name__ == "__main__":
                 print(userin + " - Command not found.")
             except SystemExit:
                 break
-            #HACK
-            except:
-                print("Try again.")
 
     except KeyboardInterrupt:
         print("\nAborted - No changes have been made.")
