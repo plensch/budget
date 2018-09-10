@@ -1,12 +1,12 @@
 #!/bin/env python3
 
 #todo: clean up code tagged: '#HACK'
-#todo: clean up budget path method
 #todo: figure out "self" in classes
 #todo: add error handling system
 
 # libraries
 from datetime import date, timedelta
+from os.path import expanduser
 
 try:
     import readline
@@ -43,6 +43,7 @@ class dateinfo:
         return date_str
 
 class budgets:
+    path = expanduser("~/.budget_file")
     budget = []
     entry_dict = {"year": 0, "month": 1, "day": 2,
                   "amount": 3, "purpose": 4, "tag": 5}
@@ -264,7 +265,7 @@ class userinput:
 
 if __name__ == "__main__":
     try:
-        path = "/home/plensch/projects/budget/budget_file"
+        path = budgets.path
         budgets.budget = budgetfile.read(path)
         budgetfile.backup(path)
 
