@@ -1,8 +1,11 @@
 #!/bin/env python3
 
-#todo: clean up code tagged: '#HACK'
-#todo: figure out "self" in classes
-#todo: add error handling system
+#todo:
+#clean up code tagged: '#HACK'
+#figure out "self" in classes
+#add error handling system
+#add case of no .budget_file being present
+#add filtering by tag
 
 # libraries
 from datetime import date, timedelta
@@ -68,7 +71,8 @@ class budgets:
 
         return entry_as_dict
 
-    def filter(budget, year, month):
+class filter:
+    def by_month(budget, year, month):
         filtered_budget = []
 
         for entry in budget:
@@ -76,6 +80,18 @@ class budgets:
             entry_month = budgets.read_entry(entry, "month")
 
             if entry_month == month and entry_month == month:
+                filtered_budget.extend([entry])
+
+        return filtered_budget
+
+    def by_tag(budget, tag):
+        tag = tag[0]
+        filtered_budget = []
+
+        for entry in budget:
+            entry_tag = budgets.read_entry(entry, "tag")
+
+            if entry_tag == tag:
                 filtered_budget.extend([entry])
 
         return filtered_budget
@@ -200,8 +216,15 @@ class commands:
         year = dateinfo.today()[0]
         month = dateinfo.today()[1]
 
-        budget_monthly = budgets.filter(budgets.budget, year, month)
+        budget_monthly = filter.by_month(budgets.budget, year, month)
         budget_calc = calculate.budget(budget_monthly)
+        budget_vis = visualize.summary(budget_calc)
+
+        print(budget_vis)
+
+    def tag(tag):
+        budget_tag = filter.by_tag(budgets.budget, tag)
+        budget_calc = calculate.budget(budget_tag)
         budget_vis = visualize.summary(budget_calc)
 
         print(budget_vis)
@@ -236,6 +259,7 @@ class commands:
 class available_commands:
     commands = {"total": commands.total,
                 "month": commands.month,
+                "tag": commands.tag,
                 "t": commands.transaction,
                 "l": commands.raw_list,
                 "h": commands.help,
