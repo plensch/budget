@@ -219,26 +219,30 @@ class visualize:
             print(entry_vis)
 
 class commands:
-    def total():
-        budget_calc = calculate.budget(budgets.budget)
+    def total(tag=None):
+        if tag:
+            tag = tag[0]
+            budget_filtered = filter.by_tag(budgets.budget, tag)
+        else:
+            budget_filtered = budgets.budget
+
+        budget_calc = calculate.budget(budget_filtered)
         budget_vis = visualize.summary(budget_calc)
 
         print(budget_vis)
 
-    def month():
+    def month(tag=None):
         year = dateinfo.today()[0]
         month = dateinfo.today()[1]
 
         budget_monthly = filter.by_month(budgets.budget, year, month)
-        budget_calc = calculate.budget(budget_monthly)
-        budget_vis = visualize.summary(budget_calc)
+        if tag:
+            tag = tag[0]
+            budget_filtered = filter.by_tag(budget_monthly, tag)
+        else:
+            budget_filtered = budget_monthly
 
-        print(budget_vis)
-
-    def tag(tag):
-        tag = tag[0]
-        budget_tag = filter.by_tag(budgets.budget, tag)
-        budget_calc = calculate.budget(budget_tag)
+        budget_calc = calculate.budget(budget_filtered)
         budget_vis = visualize.summary(budget_calc)
 
         print(budget_vis)
@@ -257,7 +261,6 @@ class commands:
         transaction.add(budgets.budget, transac)
 
     def list(tag=None):
-        print(tag)
         if tag:
             tag = tag[0]
             budget_filtered = filter.by_tag(budgets.budget, tag)
@@ -283,7 +286,6 @@ class commands:
 class available_commands:
     commands = {"total": commands.total,
                 "month": commands.month,
-                "tag": commands.tag,
                 "t": commands.transaction,
                 "l": commands.list,
                 "raw": commands.raw_list,
