@@ -2,10 +2,9 @@
 
 #todo:
 #clean up code tagged: '#HACK'
-#figure out "self" in classes
 #add error handling system
 #add case of no .budget_file being present
-#add filtering by tag
+#add currency conversion
 
 # libraries
 from datetime import date, timedelta
@@ -47,6 +46,7 @@ class dateinfo:
 
 class budgets:
     path = expanduser("~/.budget_file")
+    backup_path = path + ".edit"
     budget = []
     entry_dict = {"year": 0, "month": 1, "day": 2,
                   "amount": 3, "purpose": 4, "tag": 5}
@@ -119,12 +119,12 @@ class budgetfile:
 
                     budget.extend([entry])
 
-            return budget
-
         except FileNotFoundError:
-            print(path + " not found.")
+            print("READ: " + path + " not found.")
         except PermissionError:
-            print("Permission denied: "+ path)
+            print("READ: Permission denied: "+ path)
+
+        return budget
 
     def write(path, budget):
         entry_format = budgets.entry_format
@@ -138,20 +138,7 @@ class budgetfile:
                     budgetfile.write(entry_formatted)
 
         except PermissionError:
-            print("Permission denied: "+ path)
-
-    def backup(path):
-        try:
-            backup_file = path + ".edit"
-            with open(path, "r") as org_budgetfile:
-                with open(backup_file, "w") as bckp_budgetfile:
-                    for entry in org_budgetfile:
-                        bckp_budgetfile.write(entry)
-
-        except FileNotFoundError:
-            print(path + " not found.")
-        except PermissionError:
-            print("Permission denied: "+ path)
+            print("WRITE: Permission denied: "+ path)
 
 class transaction:
     def new(amount, purpose, tag='notag'):
@@ -245,14 +232,14 @@ class commands:
     def raw_list():
         for entry in budgets.budget:
             print(entry)
+
     def help():
         print("Available commands:")
         for entry in available_commands.commands:
             print(entry)
     #HACK
     def exit():
-        path = "/home/plensch/projects/budget/budget_file"
-        budgetfile.write(path, budgets.budget)
+        budgetfile.write(budgets.path, budgets.budget)
         print("All changes have been saved.")
         raise SystemExit
 
@@ -291,7 +278,7 @@ if __name__ == "__main__":
     try:
         path = budgets.path
         budgets.budget = budgetfile.read(path)
-        budgetfile.backup(path)
+        budgetfile.write(budgets.backup_path, budgets.budget)
 
         prompt = "> "
 
