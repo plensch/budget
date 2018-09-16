@@ -3,7 +3,6 @@
 #todo:
 #clean up code tagged: '#HACK'
 #add error handling system
-#add case of no .budget_file being present
 #add currency conversion
 
 # libraries
@@ -60,7 +59,15 @@ class budgets:
         return entry
 
     def read_entry(entry, item):
-        item_value = entry[budgets.entry_dict[item]]
+        bd = budgets.entry_dict
+
+        if item == "date":
+            year = entry[bd["year"]]
+            month = entry[bd["month"]]
+            day = entry[bd["day"]]
+            item_value = dateinfo.to_string(year, month, day)
+        else:
+            item_value = entry[budgets.entry_dict[item]]
 
         return item_value
 
@@ -85,7 +92,6 @@ class filter:
         return filtered_budget
 
     def by_tag(budget, tag):
-        tag = tag[0]
         filtered_budget = []
 
         for entry in budget:
@@ -192,6 +198,26 @@ class visualize:
 
         return vis_saldo
 
+    def list(budget):
+        entry_vis_format = "{} {} {} [{}]"
+
+        for entry in budget:
+            br = budgets.read_entry
+            date = br(entry, "date")
+            amount = br(entry, "amount")
+            purpose = br(entry, "purpose")
+            tag = br(entry, "tag")
+
+            if amount <= 0:
+                col = "red"
+            else:
+                col = "green"
+
+            amount = color.text(col, str(amount))
+            entry_vis = entry_vis_format.format(date, amount, purpose, tag)
+
+            print(entry_vis)
+
 class commands:
     def total():
         budget_calc = calculate.budget(budgets.budget)
@@ -210,6 +236,7 @@ class commands:
         print(budget_vis)
 
     def tag(tag):
+        tag = tag[0]
         budget_tag = filter.by_tag(budgets.budget, tag)
         budget_calc = calculate.budget(budget_tag)
         budget_vis = visualize.summary(budget_calc)
@@ -228,6 +255,16 @@ class commands:
             transac = transaction.new(amount, purpose)
 
         transaction.add(budgets.budget, transac)
+
+    def list(tag=None):
+        print(tag)
+        if tag:
+            tag = tag[0]
+            budget_filtered = filter.by_tag(budgets.budget, tag)
+        else:
+            budget_filtered = budgets.budget
+
+        visualize.list(budget_filtered)
 
     def raw_list():
         for entry in budgets.budget:
@@ -248,7 +285,8 @@ class available_commands:
                 "month": commands.month,
                 "tag": commands.tag,
                 "t": commands.transaction,
-                "l": commands.raw_list,
+                "l": commands.list,
+                "raw": commands.raw_list,
                 "h": commands.help,
                 "q": commands.exit}
 
