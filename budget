@@ -2,7 +2,6 @@
 
 #todo:
 #clean up code tagged: '#HACK'
-#add error handling system
 #add currency conversion
 
 # libraries
@@ -248,17 +247,22 @@ class commands:
         print(budget_vis)
 
     def transaction(args):
-        print(args)
-        amount = args[0]
-        purpose = args[1]
+        try:
+            amount = args[0]
+            purpose = args[1]
 
-        if len(args) >= 3:
-            tag = args[2]
-            transac = transaction.new(amount, purpose, tag)
-        else:
-            transac = transaction.new(amount, purpose)
+            if len(args) >= 3:
+                tag = args[2]
+                transac = transaction.new(amount, purpose, tag)
+            else:
+                transac = transaction.new(amount, purpose)
 
-        transaction.add(budgets.budget, transac)
+            transaction.add(budgets.budget, transac)
+
+        except IndexError:
+            raise Exception("Not enough Arguments provided.")
+        except ValueError:
+            raise Exception("Enter a valid amount.")
 
     def list(tag=None):
         if tag:
@@ -277,7 +281,7 @@ class commands:
         print("Available commands:")
         for entry in available_commands.commands:
             print(entry)
-    #HACK
+
     def exit():
         budgetfile.write(budgets.path, budgets.budget)
         print("All changes have been saved.")
@@ -305,14 +309,20 @@ class userinput:
         try:
             cmd = userin["command"]
             args = userin["arguments"]
-            exec_func = available_commands.commands[cmd]
 
-            if args and '' not in args:
-                return exec_func(args)
-            else:
-                return exec_func()
-        except:
-            raise
+            try:
+                exec_func = available_commands.commands[cmd]
+
+                if args and '' not in args:
+                    return exec_func(args)
+                else:
+                    return exec_func()
+
+            except KeyError:
+                raise Exception(cmd + " - Command not found.")
+
+        except Exception as e:
+            print(e)
 
 if __name__ == "__main__":
     try:
@@ -328,8 +338,6 @@ if __name__ == "__main__":
                 userin_split = userinput.split(userin)
                 userinput.execute(userin_split)
 
-            except KeyError:
-                print(userin + " - Command not found.")
             except SystemExit:
                 break
 
