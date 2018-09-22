@@ -2,13 +2,12 @@
 
 #todo:
 #clean up code tagged: '#HACK'
-#add currency conversion
-#add undo/remove
 #improve performance for large budgetfile
 
 #libraries
 from datetime import date, timedelta
 from os.path import expanduser
+import urllib.request
 
 try:
     import readline
@@ -43,6 +42,42 @@ class dateinfo:
         date_str = "{}-{}-{}".format(year, month, day)
 
         return date_str
+
+class currency:
+    rates_available = False
+    base_currency = "EUR"
+    api_url = "https://ratesapi.io/api/latest?base=" + base_currency
+
+    rates = {}
+
+    def update_rates():
+        try:
+            rates_api_request = urllib.request.urlopen(currency.api_url)
+            rates_api_data = rates_api_request.read().decode('utf-8')
+            currency.rates = eval(rates_api_data)
+            currency.rates_available = True
+        except:
+            print("Could not retrieve currency rates.")
+
+    def convert(input_currency, amount):
+        if currency.rates_available == True:
+            if input_currency in currency.rates["rates"]:
+                amount = float(amount)
+                base_to_input_rate = currency.rates["rates"][input_currency]
+                base_to_input_rate = float(base_to_input_rate)
+                base_amount = amount / base_to_input_rate
+
+                return base_amount
+            else:
+                raise Exception("Requested currency (" + input_currency
+                                                   + ") not available.")
+        else:
+            raise Exception("Currency conversion not available.")
+
+    def go_online():
+        userin = input("Retrieve currency rates? [y,N] ")
+        if userin in ["y", "Y", "yes"]:
+            currency.update_rates()
 
 class budgets:
     path = expanduser("~/.budget_file")
@@ -256,6 +291,11 @@ class commands:
         try:
             amount = args[0]
             purpose = args[1]
+            currency_tag = amount[-3:]
+
+            if currency_tag.isalpha():
+                amount = amount[:-3]
+                amount = currency.convert(currency_tag, amount)
 
             if len(args) >= 3:
                 tag = args[2]
@@ -286,6 +326,12 @@ class commands:
         for entry in budgets.budget:
             print(entry)
 
+    def undo():
+        budget = budgets.budget
+        print(visualize.entry(budget[-1]) + " removed.")
+        del budget[-1]
+        budgets.budget = budget
+
     def help():
         print("Available commands:")
         for entry in available_commands.commands:
@@ -302,6 +348,7 @@ class available_commands:
                 "t": commands.transaction,
                 "l": commands.list,
                 "raw": commands.raw_list,
+                "undo": commands.undo,
                 "h": commands.help,
                 "q": commands.exit}
 
@@ -338,6 +385,8 @@ if __name__ == "__main__":
         path = budgets.path
         budgets.budget = budgetfile.read(path)
         budgetfile.write(budgets.backup_path, budgets.budget)
+
+        currency.go_online()
 
         prompt = "> "
 
