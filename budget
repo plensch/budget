@@ -3,6 +3,7 @@
 #todo:
 #clean up code tagged: '#HACK'
 #improve performance for large budgetfile
+#add chart visualization
 
 #libraries
 from datetime import date, timedelta
