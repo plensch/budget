@@ -323,6 +323,15 @@ class commands:
         else:
             visualize.list(budgets.budget)
 
+    def list_tags():
+        tags = []
+        for entry in budgets.budget:
+            tags.extend([budgets.read_entry(entry, "tag")])
+        tags = set(tags)
+        tags.discard("notag")
+        for tag in tags:
+            print(tag)
+
     def raw_list():
         for entry in budgets.budget:
             print(entry)
@@ -349,6 +358,7 @@ class available_commands:
                 "t": commands.transaction,
                 "l": commands.list,
                 "raw": commands.raw_list,
+                "tags": commands.list_tags,
                 "undo": commands.undo,
                 "h": commands.help,
                 "q": commands.exit}
