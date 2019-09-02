@@ -47,7 +47,7 @@ class dateinfo:
 class currency:
     rates_available = False
     base_currency = "EUR"
-    api_url = "https://ratesapi.io/api/latest?base=" + base_currency
+    api_url = "https://api.ratesapi.io/api/latest?base=" + base_currency
 
     rates = {}
 
@@ -81,7 +81,7 @@ class currency:
             currency.update_rates()
 
 class budgets:
-    path = expanduser("~/.budget_file")
+    path = expanduser("~/budget_file")
     backup_path = path + ".edit"
     budget = []
     entry_dict = {"year": 0, "month": 1, "day": 2,
