@@ -55,6 +55,7 @@ class currency:
         try:
             rates_api_request = urllib.request.urlopen(currency.api_url)
             rates_api_data = rates_api_request.read().decode('utf-8')
+            # PROBLEMATIC (could be anything going into "eval()")
             currency.rates = eval(rates_api_data)
             currency.rates_available = True
         except:
