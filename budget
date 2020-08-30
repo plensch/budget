@@ -6,9 +6,10 @@
 #add chart visualization
 
 #libraries
+from ast import literal_eval
 from datetime import date, timedelta
 from os.path import expanduser
-import urllib.request
+from urllib.request import Request, urlopen
 
 try:
     import readline
@@ -53,10 +54,9 @@ class currency:
 
     def update_rates():
         try:
-            rates_api_request = urllib.request.urlopen(currency.api_url)
-            rates_api_data = rates_api_request.read().decode('utf-8')
-            # PROBLEMATIC (could be anything going into "eval()")
-            currency.rates = eval(rates_api_data)
+            rates_api_request = Request(currency.api_url, headers={"User-Agent": "Mozilla/5.0"})
+            rates_api_data = urlopen(rates_api_request).read().decode("utf-8")
+            currency.rates = literal_eval(rates_api_data)
             currency.rates_available = True
         except:
             print("Could not retrieve currency rates.")
