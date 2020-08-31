@@ -320,7 +320,7 @@ class visualize:
         for s in ("income", "expenses"):
             value = bc["totals"][s]
             chart_str = "Income:   " if s == "income" else "Expenses: "
-            bar_len = 80 - len(chart_str) - len(str(value)) - 2
+            bar_len = 80 - len(chart_str) - len(str(value)) - 4
             bar_len = bar_len * (abs(value) / max_value)
             
             for tag in bc[s]:
