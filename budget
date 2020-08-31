@@ -3,7 +3,7 @@
 #todo:
 #clean up code tagged: '#HACK'
 #improve performance for large budgetfile
-#add chart visualization
+#change chart size dynamically
 
 #libraries
 from ast import literal_eval
@@ -18,8 +18,11 @@ except ImportError:
 
 class color:
     def text(color, string):
-        colors = {"red": "\33[31m", "green": "\33[32m", "redbg": "\33[41m",
-                  "greenbg": "\33[42m", "cend": "\33[0m"}
+        colors = {"red": "\33[31m", 
+                  "green": "\33[32m", 
+                  "redbg": "\33[41m",
+                  "greenbg": "\33[42m",
+                  "cend": "\33[0m"}
         colored_string = colors[color] + string + colors["cend"]
 
         return colored_string
@@ -260,6 +263,10 @@ class visualize:
         for entry in budget[-entries:]:
             print(visualize.entry(entry))
 
+    def chart(budget_calculation):
+        bc = budget_calculation
+        
+
 class commands:
     def total(tag=None):
         if tag:
@@ -346,7 +353,7 @@ class commands:
     def help():
         print("Available commands:")
         for entry in available_commands.commands:
-            print(entry)
+            print(f"{entry} {available_commands.commands[entry][1]}")
 
     def exit():
         budgetfile.write(budgets.path, budgets.budget)
@@ -354,15 +361,15 @@ class commands:
         raise SystemExit
 
 class available_commands:
-    commands = {"total": commands.total,
-                "month": commands.month,
-                "t": commands.transaction,
-                "l": commands.list,
-                "raw": commands.raw_list,
-                "tags": commands.list_tags,
-                "undo": commands.undo,
-                "h": commands.help,
-                "q": commands.exit}
+    commands = {"total": (commands.total, "[tag]"),
+                "month": (commands.month, "[tag]"),
+                "t": (commands.transaction, "amount label [tag]"),
+                "l": (commands.list, "[number of entries ('0' prints all)]"),
+                "raw": (commands.raw_list, ""),
+                "tags": (commands.list_tags, ""),
+                "undo": (commands.undo, ""),
+                "h": (commands.help, ""),
+                "q": (commands.exit, "")}
 
 class userinput:
     def split(raw_in):
@@ -379,7 +386,7 @@ class userinput:
             args = userin["arguments"]
 
             try:
-                exec_func = available_commands.commands[cmd]
+                exec_func = available_commands.commands[cmd][0]
 
                 if args and '' not in args:
                     return exec_func(args)
@@ -387,7 +394,7 @@ class userinput:
                     return exec_func()
 
             except KeyError:
-                raise Exception(cmd + " - Command not found.")
+                raise Exception(cmd + " - Command not found. 'h' for help.")
 
         except Exception as e:
             print(e)
@@ -410,6 +417,9 @@ if __name__ == "__main__":
 
             except SystemExit:
                 break
+            except EOFError:
+                print("\nAborted - No changes have been made.")
+                break
 
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, EOFError) as e:
         print("\nAborted - No changes have been made.")
