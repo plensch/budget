@@ -188,7 +188,7 @@ class budgetfile:
             print("WRITE: Permission denied: "+ path)
 
 class transaction:
-    def new(amount, purpose, tag='notag'):
+    def new(amount, purpose, tag="notag"):
         date = dateinfo.today()
         year = date[0]
         month = date[1]
@@ -228,6 +228,35 @@ class calculate:
 
         return calculation
 
+    def tags(budget):
+        income = {}
+        expenses = {}
+        i = 0
+        e = 0
+
+        for entry in budget:
+            amount = budgets.read_entry(entry, "amount")
+            tag = budgets.read_entry(entry, "tag")
+
+            if amount > 0:
+                if tag in income:
+                    income[tag] = income[tag] + amount
+                else:
+                    income[tag] = amount
+                i += amount
+            else:
+                if tag in expenses:
+                    expenses[tag] = expenses[tag] + amount
+                else:
+                    expenses[tag] = amount
+                e += amount
+
+        calculation = {"income": income, "expenses": expenses, 
+                       "totals": {"income": i, "expenses": e}}
+        print(calculation)
+        
+        return calculation
+
 class visualize:
     def entry(entry):
         entry_vis_format = "{} {} {} [{}]"
@@ -263,9 +292,9 @@ class visualize:
         for entry in budget[-entries:]:
             print(visualize.entry(entry))
 
-    def chart(budget_calculation):
-        bc = budget_calculation
-        
+    def chart():
+        calculate.tags(budgets.budget)
+        print("yo alla")
 
 class commands:
     def total(tag=None):
@@ -295,6 +324,9 @@ class commands:
         budget_vis = visualize.summary(budget_calc)
 
         print(budget_vis)
+
+    def chart():
+        calculate.tags(budgets.budget)
 
     def transaction(args):
         try:
@@ -363,6 +395,7 @@ class commands:
 class available_commands:
     commands = {"total": (commands.total, "[tag]"),
                 "month": (commands.month, "[tag]"),
+                "chart": (commands.chart, "[month]"),
                 "t": (commands.transaction, "amount label [tag]"),
                 "l": (commands.list, "[number of entries ('0' prints all)]"),
                 "raw": (commands.raw_list, ""),
@@ -389,9 +422,9 @@ class userinput:
                 exec_func = available_commands.commands[cmd][0]
 
                 if args and '' not in args:
-                    return exec_func(args)
+                    exec_func(args)
                 else:
-                    return exec_func()
+                    exec_func()
 
             except KeyError:
                 raise Exception(cmd + " - Command not found. 'h' for help.")
