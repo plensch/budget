@@ -4,13 +4,16 @@
 #clean up code tagged: '#HACK'
 #improve performance for large budgetfile
 #change chart size dynamically
-#convert .format to fstrings
+#change .format to fstrings
+#chart coloring: what happens when amount tags > amount colors?
+#use classes the way they were intended ;)
+
 
 #libraries
 from ast import literal_eval
 from datetime import date, timedelta
 from os.path import expanduser
-from random import choice
+from random import choice, sample
 from urllib.request import Request, urlopen
 
 try:
@@ -24,32 +27,16 @@ class color:
               "orange": "\33[33m",
               "blue": "\33[34m",
               "purple": "\33[35m",
+              "cyan": "\33[36m",
+              "gray": "\33[37m",
+              "yellow": "\33[93m",
+              "pink": "\33[95m"} 
 
-
-              
-             } 
-
-               # black='\033[30m'
-               #  red='\033[31m'
-               #  green='\033[32m'
-               #  orange='\033[33m'
-               #  blue='\033[34m'
-               #  purple='\033[35m'
-               #  cyan='\033[36m'
-               #  lightgrey='\033[37m'
-               #  darkgrey='\033[90m'
-               #  lightred='\033[91m'
-               #  lightgreen='\033[92m'
-               #  yellow='\033[93m'
-               #  lightblue='\033[94m'
-               #  pink='\033[95m'
-               #  lightcyan='\033[96m'
     def text(col, string):
         end = "\33[0m"
 
         if col == "random":
             col = choice(list(color.colors.keys()))
-
         colored_string = f"{color.colors[col]}{string}{end}"
 
         return colored_string
@@ -258,6 +245,7 @@ class calculate:
     def tags(budget):
         income = {}
         expenses = {}
+        tags = {}
         i = 0
         e = 0
 
@@ -320,30 +308,32 @@ class visualize:
 
     def chart(budget_calculation):
         bc = budget_calculation
-        income = bc["totals"]["income"]
-        expenses = bc["totals"]["expenses"]
 
-        legend_str = ""
+        #TODO what if there are too many tags?
+        tags = set(bc["income"]).union(set(bc["expenses"]))
+        tag_colors = sample(set(color.colors), len(tags))
+        tag_colors = dict(zip(tags, tag_colors)) 
 
         tag_char = chr(9608) # box character
+        max_value = max(bc["totals"]["income"], abs(bc["totals"]["expenses"]))
 
-        income_str = "Income: "
-        bar_length = 80 - len(income_str) - len(str(income)) - 2
+        for s in ("income", "expenses"):
+            value = bc["totals"][s]
+            chart_str = "Income:   " if s == "income" else "Expenses: "
+            bar_len = 80 - len(chart_str) - len(str(value)) - 2
+            bar_len = bar_len * (abs(value) / max_value)
+            
+            for tag in bc[s]:
+                tag_bar_len = int(bar_len * (abs(bc[s][tag]) / abs(value)))
+                tag_str = color.text(tag_colors[tag], tag_char)
 
-        for tag in bc["income"]:
-            length = int(bar_length * (bc["income"][tag] / income))
-
-            if tag == "notag":
-                tag_str = color.text("red", tag_char)
-            else:
-                tag_str = color.text("random", tag_char)
-
-            income_str += tag_str * length
-            legend_str += f"{tag_str} {tag} "
-        income_str += f" {income:+.2f}" 
-
-        print(income_str)
-        print(legend_str)
+                chart_str += tag_str * tag_bar_len
+            chart_str = f"{chart_str} {value:+.2f}"
+            print(chart_str)
+        label_str = "Legend:   "
+        for tag in tag_colors:
+            label_str += f"{color.text(tag_colors[tag], tag_char)} {tag} "
+        print(label_str)
 
 class commands:
     def total(tag=None):
@@ -374,9 +364,17 @@ class commands:
 
         print(budget_vis)
 
-    def chart():
-        budget_vis = visualize.chart(calculate.tags(budgets.budget))
+    def chart(arg=None):
+        if arg == "total":
+            print("Budget total:")
+            budget_filtered = budgets.budget
+        else:
+            print("Budget this month:")
+            year = dateinfo.today()[0]
+            month = dateinfo.today()[1]
+            budget_filtered = filter.by_month(budgets.budget, year, month)
         
+        budget_vis = visualize.chart(calculate.tags(budget_filtered))
     def transaction(args):
         try:
             amount = args[0]
@@ -444,7 +442,7 @@ class commands:
 class available_commands:
     commands = {"total": (commands.total, "[tag]"),
                 "month": (commands.month, "[tag]"),
-                "chart": (commands.chart, "[month]"),
+                "chart": (commands.chart, "['total']"),
                 "t": (commands.transaction, "amount label [tag]"),
                 "l": (commands.list, "[number of entries ('0' prints all)]"),
                 "raw": (commands.raw_list, ""),
@@ -463,23 +461,23 @@ class userinput:
         return cmd_args
 
     def execute(userin):
-        # try:
-        cmd = userin["command"]
-        args = userin["arguments"]
+        try:
+            cmd = userin["command"]
+            args = userin["arguments"]
 
-        # try:
-        exec_func = available_commands.commands[cmd][0]
+            try:
+                exec_func = available_commands.commands[cmd][0]
 
-        if args and '' not in args:
-            exec_func(args)
-        else:
-            exec_func()
+                if args and '' not in args:
+                    exec_func(args)
+                else:
+                    exec_func()
 
-            # except KeyError:
-            #     raise Exception(cmd + " - Command not found. 'h' for help.")
+            except KeyError:
+                raise Exception(cmd + " - Command not found. 'h' for help.")
 
-        # except Exception as e:
-        #     print(e)
+        except Exception as e:
+            print(e)
 
 if __name__ == "__main__":
     try:
