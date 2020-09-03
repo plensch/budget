@@ -7,6 +7,7 @@
 #change .format to fstrings
 #chart coloring: what happens when amount tags > amount colors?
 #use classes the way they were intended ;)
+#add ability to show arbitrary month
 
 
 #libraries
@@ -15,6 +16,7 @@ from datetime import date, timedelta
 from os.path import expanduser
 from random import choice, sample
 from urllib.request import Request, urlopen
+from traceback import print_exc
 
 try:
     import readline
@@ -317,23 +319,26 @@ class visualize:
         tag_char = chr(9608) # box character
         max_value = max(bc["totals"]["income"], abs(bc["totals"]["expenses"]))
 
-        for s in ("income", "expenses"):
-            value = bc["totals"][s]
-            chart_str = "Income:   " if s == "income" else "Expenses: "
-            bar_len = 80 - len(chart_str) - len(str(value)) - 4
-            bar_len = bar_len * (abs(value) / max_value)
-            
-            for tag in bc[s]:
-                tag_bar_len = int(bar_len * (abs(bc[s][tag]) / abs(value)))
-                tag_str = color.text(tag_colors[tag], tag_char)
+        if max_value == 0:
+            print("No transactions this month")
+        else:
+            for s in ("income", "expenses"):
+                value = bc["totals"][s]
+                chart_str = "Income:   " if s == "income" else "Expenses: "
+                bar_len = 80 - len(chart_str) - len(str(value)) - 4
+                bar_len = bar_len * (abs(value) / max_value)
+                
+                for tag in bc[s]:
+                    tag_bar_len = int(bar_len * (abs(bc[s][tag]) / abs(value)))
+                    tag_str = color.text(tag_colors[tag], tag_char)
 
-                chart_str += tag_str * tag_bar_len
-            chart_str = f"{chart_str} {value:+.2f}"
-            print(chart_str)
-        label_str = "Legend:   "
-        for tag in tag_colors:
-            label_str += f"{color.text(tag_colors[tag], tag_char)} {tag} "
-        print(label_str)
+                    chart_str += tag_str * tag_bar_len
+                chart_str = f"{chart_str} {value:+.2f}"
+                print(chart_str)
+            label_str = "Legend:   "
+            for tag in tag_colors:
+                label_str += f"{color.text(tag_colors[tag], tag_char)} {tag} "
+            print(label_str)
 
 class commands:
     def total(tag=None):
@@ -365,7 +370,7 @@ class commands:
         print(budget_vis)
 
     def chart(arg=None):
-        if arg == "total":
+        if arg == ["total"]:
             print("Budget total:")
             budget_filtered = budgets.budget
         else:
@@ -476,8 +481,8 @@ class userinput:
             except KeyError:
                 raise Exception(cmd + " - Command not found. 'h' for help.")
 
-        except Exception as e:
-            print(e)
+        except Exception:
+            print_exc()
 
 if __name__ == "__main__":
     try:
